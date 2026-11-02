@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'login_page.dart';
+import 'child_home_page.dart';
 
 class HomePage extends StatelessWidget {
   final User? user;
@@ -10,6 +11,9 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (role.toLowerCase() == 'child') {
+      return ChildHomePage(name: user?.displayName ?? user?.email?.split('@').first ?? 'friend');
+    }
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home Page'),
@@ -56,4 +60,5 @@ class HomePage extends StatelessWidget {
       ),
     );
   }
+}
 }
