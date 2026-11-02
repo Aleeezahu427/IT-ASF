@@ -23,9 +23,14 @@ void main() {
     expect(find.text('Hi, Alex! 👋'), findsOneWidget);
     expect(find.text('60% finished'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('Start task'), 150);
+    await Scrollable.ensureVisible(tester.element(find.text('Start task')), alignment: 0.5);
+    await tester.pumpAndSettle();
+    expect(find.text('Start task').hitTestable(), findsOneWidget);
     await tester.tap(find.text('Start task'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Mark complete'));
+    await Scrollable.ensureVisible(tester.element(find.text('Mark complete')), alignment: 0.5);
+    await tester.pumpAndSettle();
+    expect(find.text('Mark complete').hitTestable(), findsOneWidget);
     await tester.tap(find.text('Mark complete'));
     await tester.pumpAndSettle();
     expect(find.text('80 points'), findsOneWidget);
@@ -40,6 +45,8 @@ void main() {
     await tester.tap(find.text('I’m a parent'));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('Create task'), 120);
+    await Scrollable.ensureVisible(tester.element(find.text('Create task')), alignment: 0.5);
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Create task'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextFormField), 'Read for 15 minutes');
@@ -61,4 +68,3 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 }
-
