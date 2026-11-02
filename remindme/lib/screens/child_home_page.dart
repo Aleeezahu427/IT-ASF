@@ -33,7 +33,8 @@ class _ChildHomePageState extends State<ChildHomePage> {
     backgroundColor: const Color(0xFFF6F5FC),
     appBar: AppBar(
       backgroundColor: const Color(0xFFF6F5FC),
-      title: const Text('RemindMe', style: TextStyle(color: _ink, fontWeight: FontWeight.w800)),
+      title: const Text('RemindMe', style: TextStyle(color: _ink, fontSize: 18, fontWeight: FontWeight.w800)),
+      titleSpacing: 12,
       actions: [
         if (widget.demoMode) IconButton(tooltip: 'Reset demo', onPressed: _reset, icon: const Icon(Icons.restart_alt)),
         Padding(
@@ -45,7 +46,7 @@ class _ChildHomePageState extends State<ChildHomePage> {
     body: SafeArea(
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 760),
+          constraints: const BoxConstraints(maxWidth: 480),
           child: _tab == 0 ? _home() : _placeholder(),
         ),
       ),
@@ -78,7 +79,7 @@ class _ChildHomePageState extends State<ChildHomePage> {
       _card(
         color: _purple,
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Row(children: [Icon(Icons.rocket_launch_outlined, color: Colors.white), SizedBox(width: 10), Text('Your progress today', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600))]),
+          const Row(children: [Icon(Icons.rocket_launch_outlined, color: Colors.white), SizedBox(width: 10), Expanded(child: Text('Your progress today', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)))]),
           const SizedBox(height: 18),
           Text('${(_completed / 10 * 100).round()}% finished', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800, color: Colors.white)),
           const SizedBox(height: 12),
