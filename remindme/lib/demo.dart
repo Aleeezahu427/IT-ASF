@@ -66,10 +66,13 @@ class _DemoShellState extends State<_DemoShell> {
     return Column(children: [
       Material(color: const Color(0xFFECE8FF), child: SafeArea(bottom: false, child: SizedBox(height: 44, child: Row(children: [
         TextButton.icon(onPressed: () => setState(() => _role = null), icon: const Icon(Icons.arrow_back, size: 18), label: const Text('Switch role')),
-        const Spacer(),
-        Padding(padding: const EdgeInsets.only(right: 12), child: Text('$_role demo')),
+        Expanded(child: Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: Text('$_role demo', textAlign: TextAlign.right, maxLines: 1, overflow: TextOverflow.ellipsis),
+        )),
       ])))),
       Expanded(child: _role == 'Parent' ? const ParentHomePage(name: 'Falis', demoMode: true) : const ChildHomePage(name: 'Alex', demoMode: true)),
     ]);
   }
 }
+
