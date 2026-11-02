@@ -7,24 +7,67 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:remindme/main.dart';
+import 'package:remindme/demo.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets(
+    'Child demo completes task and updates progress and points once',
+    (tester) async {
+      await tester.binding.setSurfaceSize(
+        const Size(900, 1600),
+      );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+      addTearDown(
+        () => tester.binding.setSurfaceSize(null),
+      );
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+      await tester.pumpWidget(const DemoApp());
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
-  });
+      expect(find.text('Hi, Alex! 👋'), findsOneWidget);
+      expect(find.text('70 points'), findsOneWidget);
+      expect(find.text('60% finished'), findsOneWidget);
+
+      await tester.tap(find.text('Start task'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Mark complete'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('70% finished'), findsOneWidget);
+      expect(find.text('7/10 tasks completed'), findsOneWidget);
+      expect(find.text('80 points'), findsOneWidget);
+      expect(find.text('80/100 points'), findsOneWidget);
+
+      final completedButton = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, 'Completed'),
+      );
+
+      expect(completedButton.onPressed, isNull);
+
+      await tester.tap(find.byTooltip('Reset demo'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('60% finished'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Bottom navigation opens placeholder and returns home',
+    (tester) async {
+      await tester.pumpWidget(const DemoApp());
+
+      await tester.tap(find.text('Routines'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Routines page coming soon'),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.text('Back to Home'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Hi, Alex! 👋'), findsOneWidget);
+    },
+  );
 }
