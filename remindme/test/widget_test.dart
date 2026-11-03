@@ -7,24 +7,64 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:remindme/main.dart';
+import 'package:remindme/demo.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  Future<void> mobile(WidgetTester tester) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const DemoApp());
+  }
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  testWidgets('Chooser opens child; completion updates points; role switch works', (tester) async {
+    await mobile(tester);
+    await tester.tap(find.text('I’m a child'));
+    await tester.pumpAndSettle();
+    expect(find.text('Hi, Alex! 👋'), findsOneWidget);
+    expect(find.text('60% finished'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Start task'), 150);
+    await Scrollable.ensureVisible(tester.element(find.text('Start task')), alignment: 0.5);
+    await tester.pumpAndSettle();
+    expect(find.text('Start task').hitTestable(), findsOneWidget);
+    await tester.tap(find.text('Start task'));
+    await tester.pumpAndSettle();
+    await Scrollable.ensureVisible(tester.element(find.text('Mark complete')), alignment: 0.5);
+    await tester.pumpAndSettle();
+    expect(find.text('Mark complete').hitTestable(), findsOneWidget);
+    await tester.tap(find.text('Mark complete'));
+    await tester.pumpAndSettle();
+    expect(find.text('80 points'), findsOneWidget);
+    await tester.tap(find.text('Switch role'));
+    await tester.pumpAndSettle();
+    expect(find.text('Who’s using the app?'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  testWidgets('Parent assigns a demo task inside mobile viewport', (tester) async {
+    await mobile(tester);
+    await tester.tap(find.text('I’m a parent'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Create task'), 120);
+    await Scrollable.ensureVisible(tester.element(find.text('Create task')), alignment: 0.5);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Create task'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField), 'Read for 15 minutes');
+    await tester.tap(find.text('Assign task'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Alex: Read for 15 minutes'), 120);
+    expect(find.text('Alex: Read for 15 minutes'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  testWidgets('Wide browser displays chooser in phone frame', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(1200, 1000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const DemoApp());
+    expect(find.byType(FittedBox), findsOneWidget);
+    await tester.tap(find.text('I’m a parent'));
+    await tester.pumpAndSettle();
+    expect(find.text('Hi, Falis! 👋'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 }
