@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import 'login_page.dart';
 
 class ParentHomePage extends StatefulWidget {
   const ParentHomePage({super.key, required this.name, this.demoMode = false});
@@ -41,15 +44,30 @@ class _ParentHomePageState extends State<ParentHomePage> {
     setState(() => _assigned.add('$recipient: $title'));
   }
 
+  Future<void> _logout() async {
+    try {
+      if (!widget.demoMode) {
+        await FirebaseAuth.instance.signOut();
+      }
+
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute<void>(builder: (_) => const LoginPage()),
+        (_) => false,
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not log out: $error')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: const Color(0xFFF2F7F6),
-    appBar: AppBar(backgroundColor: const Color(0xFFF2F7F6), title: const Text('RemindMe', style: TextStyle(fontWeight: FontWeight.bold)), actions: [
-      if (widget.demoMode) IconButton(tooltip: 'Reset parent demo', onPressed: () => setState(() { _assigned.clear(); _approved = false; _child = 'Alex'; _tab = 0; }), icon: const Icon(Icons.restart_alt)),
-    ]),
+    appBar: AppBar(backgroundColor: const Color(0xFFF2F7F6), title: const Text('RemindMe', style: TextStyle(fontWeight: FontWeight.bold))),
     body: SafeArea(child: ListView(padding: const EdgeInsets.all(20), children: _tab == 0 ? [
-      const Text('PARENT HOMEPAGE • Sample data', style: TextStyle(color: _teal, fontSize: 12, fontWeight: FontWeight.bold)),
-      const SizedBox(height: 14),
       Text('Hi, ${widget.name}! 👋', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
       const Text('A little support makes a big difference.'),
       const SizedBox(height: 22),
@@ -91,8 +109,23 @@ class _ParentHomePageState extends State<ParentHomePage> {
       const SizedBox(height: 20),
       const Text('Recent activity', style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold)),
       const ListTile(contentPadding: EdgeInsets.zero, leading: Icon(Icons.task_alt, color: _teal), title: Text('Alex packed their school bag'), subtitle: Text('Sample activity • +10 points')),
-      const SizedBox(height: 12),
-      const Text('UI prototype: family data is mocked. Assignments and approvals stay in this parent session and are not synced to the child demo. No real reward or screen access is granted.', style: TextStyle(fontSize: 12, color: Colors.black54)),
+    ] : _tab == 4 ? [
+      const Text('Profile', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+      const SizedBox(height: 24),
+      _card(child: Column(children: [
+        const CircleAvatar(radius: 32, child: Icon(Icons.person_outline, size: 36)),
+        const SizedBox(height: 12),
+        Text(widget.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 20),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: _logout,
+            icon: const Icon(Icons.logout),
+            label: const Text('Log out'),
+          ),
+        ),
+      ])),
     ] : [
       Text(_pages[_tab], style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
       const SizedBox(height: 24),

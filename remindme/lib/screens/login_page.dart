@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'home_page.dart';
+
+import 'child_home_page.dart';
+import 'parent_home_page.dart';
 import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -11,6 +13,9 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  static const _demoEmail = 'user@example.com';
+  static const _demoPassword = 'example';
+
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _emailController = TextEditingController();
@@ -95,6 +100,11 @@ class _LoginPageState extends State<LoginPage> {
       return 'Password field cannot be empty';
     }
 
+    if (_emailController.text.trim().toLowerCase() == _demoEmail &&
+        value == _demoPassword) {
+      return null;
+    }
+
     if (value.length < 8) {
       return 'Password must be at least 8 characters long';
     }
@@ -116,6 +126,19 @@ class _LoginPageState extends State<LoginPage> {
     }
     return null;
   }
+
+  void _navigateToHome({required String name, required bool demoMode}) {
+    final selectedRole = _selectedRole;
+    final Widget homePage = selectedRole == 'Child'
+        ? ChildHomePage(name: name, demoMode: demoMode)
+        : ParentHomePage(name: name, demoMode: demoMode);
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => homePage),
+    );
+  }
+
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -126,22 +149,33 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     try {
-      final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
-
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HomePage(
-              user: userCredential.user,
-              role: _selectedRole ?? 'User',
-            ),
-          ),
-        );
+      final email = _emailController.text.trim();
+      if (email.toLowerCase() == _demoEmail &&
+          _passwordController.text == _demoPassword) {
+        if (mounted) {
+          _navigateToHome(
+            name: _selectedRole == 'Child' ? 'Alex' : 'Falis',
+            demoMode: true,
+          );
+        }
+        return;
       }
+
+      final userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(
+            email: email,
+            password: _passwordController.text,
+          );
+
+      if (!mounted) return;
+
+      _navigateToHome(
+        name:
+            userCredential.user?.displayName ??
+            userCredential.user?.email?.split('@').first ??
+            (_selectedRole == 'Child' ? 'Child' : 'Parent'),
+        demoMode: false,
+      );
     } on FirebaseAuthException catch (e) {
       String errorMessage = 'Authentication failed.';
 
@@ -150,7 +184,8 @@ class _LoginPageState extends State<LoginPage> {
       } else if (e.code == 'wrong-password') {
         errorMessage = 'Incorrect password provided.';
       } else if (e.code == 'invalid-credential') {
-        errorMessage = 'Invalid credentials. Please check your email and password.';
+        errorMessage =
+            'Invalid credentials. Please check your email and password.';
       } else if (e.code == 'invalid-email') {
         errorMessage = 'The email address is formatted incorrectly.';
       } else {
@@ -191,7 +226,10 @@ class _LoginPageState extends State<LoginPage> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 16.0,
+            ),
             child: Form(
               key: _formKey,
               child: Column(
@@ -201,10 +239,7 @@ class _LoginPageState extends State<LoginPage> {
                   const Text(
                     'Welcome back!',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   const Text(
@@ -269,14 +304,13 @@ class _LoginPageState extends State<LoginPage> {
                     onChanged: _isLoading
                         ? null
                         : (String? newValue) {
-                      setState(() {
-                        _selectedRole = newValue;
-                      });
-                    },
+                            setState(() {
+                              _selectedRole = newValue;
+                            });
+                          },
                     validator: _validateRole,
                   ),
                   const SizedBox(height: 24),
-
 
                   SizedBox(
                     height: 50,
@@ -289,16 +323,16 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       child: _isLoading
                           ? const SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                        ),
-                      )
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                              ),
+                            )
                           : const Text(
-                        'Log In',
-                        style: TextStyle(fontSize: 18),
-                      ),
+                              'Log In',
+                              style: TextStyle(fontSize: 18),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -311,13 +345,13 @@ class _LoginPageState extends State<LoginPage> {
                         onTap: _isLoading
                             ? null
                             : () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const RegisterPage(),
-                            ),
-                          );
-                        },
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const RegisterPage(),
+                                  ),
+                                );
+                              },
                         child: Text(
                           'Register',
                           style: TextStyle(
