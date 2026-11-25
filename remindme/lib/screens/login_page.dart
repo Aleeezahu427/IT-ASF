@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'child_home_page.dart';
+import '../auth_service.dart';
+import 'home_page.dart';
 import 'parent_home_page.dart';
 import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  const LoginPage({super.key, this.accountDeleted = false});
+
+  final bool accountDeleted;
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -23,9 +26,6 @@ class _LoginPageState extends State<LoginPage> {
 
   bool _obscurePassword = true;
   bool _isLoading = false;
-  String? _selectedRole;
-
-  final List<String> _roles = ['Parent', 'Independent', 'Child'];
 
   @override
   void dispose() {
@@ -120,22 +120,28 @@ class _LoginPageState extends State<LoginPage> {
     return null;
   }
 
-  String? _validateRole(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please select your role';
-    }
-    return null;
-  }
-
-  void _navigateToHome({required String name, required bool demoMode}) {
-    final selectedRole = _selectedRole;
-    final Widget homePage = selectedRole == 'Child'
-        ? ChildHomePage(name: name, demoMode: demoMode)
-        : ParentHomePage(name: name, demoMode: demoMode);
-
+  void _navigateToHome({
+    required User user,
+    required String name,
+    required String role,
+  }) {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => homePage),
+      MaterialPageRoute(
+        builder: (context) => HomePage(user: user, name: name, role: role),
+      ),
+    );
+  }
+
+  void _navigateToDemoHome() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ParentHomePage(
+          name: 'Falis',
+          demoMode: true,
+        ),
+      ),
     );
   }
 
@@ -153,10 +159,7 @@ class _LoginPageState extends State<LoginPage> {
       if (email.toLowerCase() == _demoEmail &&
           _passwordController.text == _demoPassword) {
         if (mounted) {
-          _navigateToHome(
-            name: _selectedRole == 'Child' ? 'Alex' : 'Falis',
-            demoMode: true,
-          );
+          _navigateToDemoHome();
         }
         return;
       }
@@ -167,15 +170,34 @@ class _LoginPageState extends State<LoginPage> {
             password: _passwordController.text,
           );
 
+      final user = userCredential.user;
+      if (user == null) {
+        throw StateError('Authentication returned no user.');
+      }
+
+      final profile = await AuthService().getMyProfile();
+      if (profile == null) {
+        throw StateError('Your account profile could not be found.');
+      }
+
+      final accountType = profile['role'];
+      if (accountType is! String) {
+        throw StateError('Your account type is missing.');
+      }
+
+      final role = accountType.toLowerCase();
+      if (role != 'parent' && role != 'independent') {
+        throw StateError('Your account type is not supported.');
+      }
+
+      final profileName = profile['name'];
+      final name = profileName is String && profileName.trim().isNotEmpty
+          ? profileName.trim()
+          : user.displayName ?? user.email?.split('@').first ?? 'there';
+
       if (!mounted) return;
 
-      _navigateToHome(
-        name:
-            userCredential.user?.displayName ??
-            userCredential.user?.email?.split('@').first ??
-            (_selectedRole == 'Child' ? 'Child' : 'Parent'),
-        demoMode: false,
-      );
+      _navigateToHome(user: user, name: name, role: role);
     } on FirebaseAuthException catch (e) {
       String errorMessage = 'Authentication failed.';
 
@@ -194,7 +216,10 @@ class _LoginPageState extends State<LoginPage> {
 
       _showErrorDialog(errorMessage);
     } catch (e) {
-      _showErrorDialog('An unexpected error occurred: ${e.toString()}');
+      final message = e is StateError
+          ? e.message.toString()
+          : 'An unexpected error occurred: ${e.toString()}';
+      _showErrorDialog(message);
     } finally {
       if (mounted) {
         setState(() {
@@ -236,6 +261,31 @@ class _LoginPageState extends State<LoginPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  if (widget.accountDeleted) ...[
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8F5E9),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(
+                            Icons.check_circle,
+                            color: Color(0xFF2E7D32),
+                          ),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Account deleted successfully.',
+                              style: TextStyle(color: Color(0xFF2E7D32)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
                   const Text(
                     'Welcome back!',
                     textAlign: TextAlign.center,
@@ -254,7 +304,7 @@ class _LoginPageState extends State<LoginPage> {
                     keyboardType: TextInputType.emailAddress,
                     enabled: !_isLoading,
                     decoration: const InputDecoration(
-                      labelText: 'Email / Username',
+                      labelText: 'Email',
                       hintText: 'user@example.com',
                       prefixIcon: Icon(Icons.email_outlined),
                       border: OutlineInputBorder(),
@@ -285,30 +335,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     validator: _validatePassword,
-                  ),
-                  const SizedBox(height: 16),
-
-                  DropdownButtonFormField<String>(
-                    initialValue: _selectedRole,
-                    decoration: const InputDecoration(
-                      labelText: "I’m a...",
-                      prefixIcon: Icon(Icons.person_outline),
-                      border: OutlineInputBorder(),
-                    ),
-                    items: _roles.map((String role) {
-                      return DropdownMenuItem<String>(
-                        value: role,
-                        child: Text(role),
-                      );
-                    }).toList(),
-                    onChanged: _isLoading
-                        ? null
-                        : (String? newValue) {
-                            setState(() {
-                              _selectedRole = newValue;
-                            });
-                          },
-                    validator: _validateRole,
                   ),
                   const SizedBox(height: 24),
 

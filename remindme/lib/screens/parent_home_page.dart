@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'account_settings_page.dart';
 import 'login_page.dart';
 
 class ParentHomePage extends StatefulWidget {
@@ -16,9 +17,26 @@ class _ParentHomePageState extends State<ParentHomePage> {
   int _tab = 0;
   String _child = 'Alex';
   bool _approved = false;
+  late String _name;
   final List<String> _assigned = [];
   static const _teal = Color(0xFF16796E);
   final _pages = ['Home', 'Tasks', 'Routines', 'Rewards', 'Profile'];
+
+  @override
+  void initState() {
+    super.initState();
+    _name = widget.name;
+  }
+
+  Future<void> _openAccountSettings() async {
+    final updatedName = await Navigator.of(context).push<String>(
+      MaterialPageRoute<String>(
+        builder: (_) => AccountSettingsPage(name: _name),
+      ),
+    );
+    if (!mounted || updatedName == null) return;
+    setState(() => _name = updatedName);
+  }
 
   Future<void> _assignTask() async {
     final controller = TextEditingController();
@@ -68,7 +86,7 @@ class _ParentHomePageState extends State<ParentHomePage> {
     backgroundColor: const Color(0xFFF2F7F6),
     appBar: AppBar(backgroundColor: const Color(0xFFF2F7F6), title: const Text('RemindMe', style: TextStyle(fontWeight: FontWeight.bold))),
     body: SafeArea(child: ListView(padding: const EdgeInsets.all(20), children: _tab == 0 ? [
-      Text('Hi, ${widget.name}! 👋', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+      Text('Hi, $_name! 👋', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
       const Text('A little support makes a big difference.'),
       const SizedBox(height: 22),
       const Text('Your family', style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold)),
@@ -115,8 +133,19 @@ class _ParentHomePageState extends State<ParentHomePage> {
       _card(child: Column(children: [
         const CircleAvatar(radius: 32, child: Icon(Icons.person_outline, size: 36)),
         const SizedBox(height: 12),
-        Text(widget.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+        Text(_name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         const SizedBox(height: 20),
+        if (!widget.demoMode) ...[
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: _openAccountSettings,
+              icon: const Icon(Icons.settings_outlined),
+              label: const Text('Account settings'),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
         SizedBox(
           width: double.infinity,
           child: FilledButton.icon(
