@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'account_type_selection_page.dart';
 import 'account_settings_page.dart';
-import 'login_page.dart';
+import 'create_child_account_page.dart';
 
 class ParentHomePage extends StatefulWidget {
   const ParentHomePage({super.key, required this.name, this.demoMode = false});
@@ -19,7 +20,6 @@ class _ParentHomePageState extends State<ParentHomePage> {
   bool _approved = false;
   late String _name;
   final List<String> _assigned = [];
-  static const _teal = Color(0xFF16796E);
   final _pages = ['Home', 'Tasks', 'Routines', 'Rewards', 'Profile'];
 
   @override
@@ -70,7 +70,9 @@ class _ParentHomePageState extends State<ParentHomePage> {
 
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute<void>(builder: (_) => const LoginPage()),
+        MaterialPageRoute<void>(
+          builder: (_) => const AccountTypeSelectionPage(),
+        ),
         (_) => false,
       );
     } catch (error) {
@@ -82,7 +84,9 @@ class _ParentHomePageState extends State<ParentHomePage> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return Scaffold(
     backgroundColor: const Color(0xFFF2F7F6),
     appBar: AppBar(backgroundColor: const Color(0xFFF2F7F6), title: const Text('RemindMe', style: TextStyle(fontWeight: FontWeight.bold))),
     body: SafeArea(child: ListView(padding: const EdgeInsets.all(20), children: _tab == 0 ? [
@@ -93,7 +97,7 @@ class _ParentHomePageState extends State<ParentHomePage> {
       const SizedBox(height: 10),
       Wrap(spacing: 10, children: ['Alex', 'Sam'].map((name) => ChoiceChip(label: Text(name), avatar: const Icon(Icons.face), selected: _child == name, onSelected: (_) => setState(() => _child = name))).toList()),
       const SizedBox(height: 16),
-      _card(color: _teal, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _card(color: primary, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text('$_child’s day', style: const TextStyle(color: Colors.white, fontSize: 20)),
         const SizedBox(height: 12),
         Text(_child == 'Alex' ? '6/10 tasks completed' : '3/5 tasks completed', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 24)),
@@ -103,11 +107,11 @@ class _ParentHomePageState extends State<ParentHomePage> {
         Text(_child == 'Alex' ? '60% finished • 70 points' : '60% finished • 40 points', style: const TextStyle(color: Colors.white)),
       ])),
       const SizedBox(height: 18),
-      FilledButton.icon(style: FilledButton.styleFrom(backgroundColor: _teal, padding: const EdgeInsets.all(16)), onPressed: widget.demoMode ? _assignTask : null, icon: const Icon(Icons.add), label: const Text('Create task')),
+      FilledButton.icon(style: FilledButton.styleFrom(backgroundColor: primary, padding: const EdgeInsets.all(16)), onPressed: widget.demoMode ? _assignTask : null, icon: const Icon(Icons.add), label: const Text('Create task')),
       const SizedBox(height: 20),
       const Text('Coming up', style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold)),
       const SizedBox(height: 10),
-      _card(child: ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.menu_book_outlined, color: _teal), title: Text(_child == 'Alex' ? 'Finish homework' : 'Reading time'), subtitle: Text('$_child • Due in 20 min'))),
+      _card(child: ListTile(contentPadding: EdgeInsets.zero, leading: Icon(Icons.menu_book_outlined, color: primary), title: Text(_child == 'Alex' ? 'Finish homework' : 'Reading time'), subtitle: Text('$_child • Due in 20 min'))),
       if (_assigned.isNotEmpty) ...[
         const SizedBox(height: 18),
         const Text('Assigned in this demo', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -126,7 +130,7 @@ class _ParentHomePageState extends State<ParentHomePage> {
       ])),
       const SizedBox(height: 20),
       const Text('Recent activity', style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold)),
-      const ListTile(contentPadding: EdgeInsets.zero, leading: Icon(Icons.task_alt, color: _teal), title: Text('Alex packed their school bag'), subtitle: Text('Sample activity • +10 points')),
+      ListTile(contentPadding: EdgeInsets.zero, leading: Icon(Icons.task_alt, color: primary), title: const Text('Alex packed their school bag'), subtitle: const Text('Sample activity • +10 points')),
     ] : _tab == 4 ? [
       const Text('Profile', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
       const SizedBox(height: 24),
@@ -135,6 +139,19 @@ class _ParentHomePageState extends State<ParentHomePage> {
         const SizedBox(height: 12),
         Text(_name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         const SizedBox(height: 20),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const CreateChildAccountPage(),
+              ),
+            ),
+            icon: const Icon(Icons.person_add_alt_1),
+            label: const Text('Create child account'),
+          ),
+        ),
+        const SizedBox(height: 12),
         if (!widget.demoMode) ...[
           SizedBox(
             width: double.infinity,
@@ -167,7 +184,8 @@ class _ParentHomePageState extends State<ParentHomePage> {
       NavigationDestination(icon: Icon(Icons.card_giftcard_outlined), label: 'Rewards'),
       NavigationDestination(icon: Icon(Icons.person_outline), label: 'Profile'),
     ]),
-  );
+    );
+  }
 
   Widget _card({required Widget child, Color color = Colors.white}) => Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(20)), child: child);
 }

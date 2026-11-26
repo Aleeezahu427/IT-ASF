@@ -12,7 +12,6 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  static const _teal = Color(0xFF16796E);
   static const _requirementGreen = Color(0xFF2E7D32);
 
   final _formKey = GlobalKey<FormState>();
@@ -118,6 +117,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
     return Scaffold(
       backgroundColor: const Color(0xFFF2F7F6),
       appBar: AppBar(
@@ -130,7 +130,7 @@ class _RegisterPageState extends State<RegisterPage> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
             children: [
-              const Icon(Icons.person_add_alt_1, size: 48, color: _teal),
+              Icon(Icons.person_add_alt_1, size: 48, color: primary),
               const SizedBox(height: 12),
               const Text(
                 'Join RemindMe',
@@ -255,7 +255,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 height: 52,
                 child: FilledButton(
                   onPressed: _isLoading ? null : _register,
-                  style: FilledButton.styleFrom(backgroundColor: _teal),
+                  style: FilledButton.styleFrom(backgroundColor: primary),
                   child: _isLoading
                       ? const SizedBox(
                           width: 24,
@@ -291,10 +291,7 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              text,
-              style: TextStyle(color: color, fontSize: 13),
-            ),
+            child: Text(text, style: TextStyle(color: color, fontSize: 13)),
           ),
         ],
       ),

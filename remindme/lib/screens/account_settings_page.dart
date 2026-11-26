@@ -1,8 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../app_theme.dart';
 import '../auth_service.dart';
-import 'login_page.dart';
+import 'account_type_selection_page.dart';
 
 class AccountSettingsPage extends StatefulWidget {
   const AccountSettingsPage({super.key, required this.name});
@@ -14,8 +15,6 @@ class AccountSettingsPage extends StatefulWidget {
 }
 
 class _AccountSettingsPageState extends State<AccountSettingsPage> {
-  static const _teal = Color(0xFF16796E);
-
   final _nameFormKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   bool _isBusy = false;
@@ -70,6 +69,15 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
       _showError('Could not update your name', error);
     } finally {
       if (mounted) setState(() => _isBusy = false);
+    }
+  }
+
+  Future<void> _selectPalette(AppPalette? palette) async {
+    if (palette == null) return;
+    try {
+      await AppThemeSettings.select(palette);
+    } catch (error) {
+      _showError('Could not save the app theme', error);
     }
   }
 
@@ -250,7 +258,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute<void>(
-          builder: (_) => const LoginPage(accountDeleted: true),
+          builder: (_) => const AccountTypeSelectionPage(accountDeleted: true),
         ),
         (_) => false,
       );
@@ -319,9 +327,48 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
             const SizedBox(height: 12),
             FilledButton.icon(
               onPressed: _isBusy ? null : _saveName,
-              style: FilledButton.styleFrom(backgroundColor: _teal),
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+              ),
               icon: const Icon(Icons.save_outlined),
               label: const Text('Save name'),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Appearance',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            ValueListenableBuilder<AppPalette>(
+              valueListenable: AppThemeSettings.selectedPalette,
+              builder: (context, selectedPalette, _) => InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: 'Color theme',
+                  border: OutlineInputBorder(),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<AppPalette>(
+                    value: selectedPalette,
+                    isExpanded: true,
+                    items: AppPalette.values.map((palette) {
+                      return DropdownMenuItem<AppPalette>(
+                        value: palette,
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 10,
+                              backgroundColor: palette.seedColor,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(palette.label),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: _isBusy ? null : _selectPalette,
+                  ),
+                ),
+              ),
             ),
             const Divider(height: 40),
             ListTile(

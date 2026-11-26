@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import 'account_settings_page.dart';
-import 'login_page.dart';
+import 'account_type_selection_page.dart';
 import 'child_home_page.dart';
 import 'parent_home_page.dart';
 
@@ -72,7 +72,9 @@ class _HomePageState extends State<HomePage> {
               if (context.mounted) {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                  MaterialPageRoute(
+                    builder: (context) => const AccountTypeSelectionPage(),
+                  ),
                 );
               }
             },
@@ -85,7 +87,11 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.check_circle_outline, size: 80, color: Colors.green),
+              Icon(
+                Icons.check_circle_outline,
+                size: 80,
+                color: Theme.of(context).colorScheme.primary,
+              ),
               const SizedBox(height: 16),
               Text(
                 'Hi, $_displayName!',
@@ -102,7 +108,10 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 8),
               Text(
                 'Role: ${widget.role}',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),
